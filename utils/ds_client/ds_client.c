@@ -5,7 +5,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
 #include <fcntl.h>
 #include <memory.h>
 #include <errno.h>
@@ -13,7 +12,7 @@
 
 #include <crtlib/include/crtlib.h>
 #include <utils/ucrt/include/ucrt.h>
-#include <include/ds_cl.h>
+#include <include/ds_cl.h> /* client lib */
 
 #define CON_NUM  3
 
@@ -21,6 +20,7 @@ int main(int argc, const char *argv[])
 {
 		int err = DS_E_BUF_SMALL;
 		int i;
+		uint64_t size;
 		struct ds_obj_id *obj_id;
 		/*
 		 * Create an array of connections 
@@ -48,30 +48,31 @@ int main(int argc, const char *argv[])
 		/* Connect to all computers in network */
 		for(i=0;i<CON_NUM;i++)
 				ds_connect(&con[i],ip,port);
+		
+		/* generate object id and output it */
+		obj_id = ds_obj_id_gen();
+		if (!obj_id) {
+				CLOG(CL_ERR, "cant generate obj id");
+		} else {
+				char *obj_id_s = ds_obj_id_to_str(obj_id);
+				if (!obj_id_s) {
+						CLOG(CL_ERR, "cant convert obj id to str");
+		        } else {
+						/* Log obj id */
+						CLOG(CL_INF, "generated obj id %s", obj_id_s);
+						crt_free(obj_id_s);
+		        }
+		}
+		
+		size=10000;
+		if(ds_create_object(&con[0],obj_id,size))
+				CLOG(CL_ERR, "cant reserve space for object on storage");
+		
+				
+		crt_free(obj_id);
 		/* Disconnect from all hosts */
-		for(i=0;i<CON_NUMB;i++)
+		for(i=0;i<CON_NUM;i++)
 				ds_disconnect(&con[i].sock);
 		
-	
-	
-	/* run sha256 test from crtlib */
-	__sha256_test();
-
-	/* generate object id and output it */
-	obj_id = ds_obj_id_gen();
-	if (!obj_id) {
-		CLOG(CL_ERR, "cant generate obj id");
-	} else {
-		char *obj_id_s = ds_obj_id_to_str(obj_id);
-		if (!obj_id_s) {
-			CLOG(CL_ERR, "cant convert obj id to str");
-		} else {
-			/* Log obj id */
-			CLOG(CL_INF, "generated obj id %s", obj_id_s);
-			crt_free(obj_id_s);
-		}
-		crt_free(obj_id);
-	}
-
-	return 0;
+		return 0;
 }

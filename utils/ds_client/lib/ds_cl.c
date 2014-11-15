@@ -54,6 +54,12 @@ int ds_connect(struct con_handle *con,char *ip,int port)
 		return 0;
 } 
 
+int  ds_create_object(struct con_handle *con, struct ds_obj_id obj_id, uint64_t obj_size);
+{
+	
+	return 0;
+}
+
 int ds_disconnect(struct con_handle *con)
 {
 		close(con->sock);

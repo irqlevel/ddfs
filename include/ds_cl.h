@@ -9,11 +9,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include "crtlib/include/ds_obj_id.h"
 
 struct object {
 		struct ds_obj_id id;
 		unsigned char    *data;
+		uint64_t		 data_off;
 		uint64_t         size;
 };
  
@@ -22,11 +22,8 @@ struct con_handle {
 		int con_id;
 };
 
-struct host {
-		char *address;
-		int  port;
-};
-
 int  con_handle_init(struct con_handle *connection)
 int  ds_connect(struct con_handle *con,char *ip,int port);
 int  ds_disconnect(struct con_handle *con);
+int  ds_create_object(struct con_handle *con, struct ds_obj_id obj_id, uint64_t obj_size); 
+int  ds_put_object(struct con_handle *con,struct ds_obj_id obj_id, void *data, uint32_t data_size, uint64_t data_off);
