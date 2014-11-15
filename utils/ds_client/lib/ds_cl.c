@@ -1,10 +1,10 @@
 #include "ds_cl.h"
 
-#define PAGE_SIZE 4096
-#define PART_NUM 10
-#define CMD_PUT 1
-#define CMD_GET 2
-#define CMD_DELETE 3
+#define PAGE_SIZE      4096
+#define PART_NUM       10
+#define CMD_PUT        1
+#define CMD_GET        2
+#define CMD_DELETE 	   3
 #define CMD_DISCONNECT 4
 
 struct ds_packet {
@@ -14,7 +14,7 @@ struct ds_packet {
 		uint32_t 		 data_size;
 		uint64_t 		 data_off
 };
-static int con_count = 0,host_count = 0;
+static int con_count = 0;
 
 int con_handle_init(struct con_handle *connection)
 {
@@ -64,17 +64,18 @@ int  ds_create_object(struct con_handle *con, struct ds_obj_id obj_id, uint64_t 
 		return 0;
 }
 
-int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint32_t data_size, uint64_t off)
+int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint32_t data_size, uint64_t *off)
 {
 		int i;
 		struct ds_packet parts[PART_NUM];
 		
 		for(i=0;i<PART_NUM;i++) {
-				parts[0].cmd = CMD_PUT; 
-				parts[0].obj_id = id;
-				parts[0].data = data;
-		parts[0].data_size = data_size;
-		parts[0].data_off = off;
+				parts[i].cmd = CMD_PUT; 
+				parts[i].obj_id = id;
+				parts[i].data[i] = data[i+*off];
+				parts[i].data_size = data_size;
+				parts[i].data_off = off;
+		}
 		/* Devide object data into 10 parts | part lenght is 5*/
 		off = 0;
 		for(i=0;i<PART_NUM;i++)

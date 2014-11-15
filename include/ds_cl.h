@@ -22,7 +22,6 @@ struct con_handle {
 		int con_id;
 };
 
-
 int  con_handle_init(struct con_handle *connection)
 int  ds_connect(struct con_handle *con,char *ip,int port);
 int  ds_disconnect(struct con_handle *con);

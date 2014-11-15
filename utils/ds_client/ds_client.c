@@ -73,7 +73,7 @@ int main(int argc, const char *argv[])
 		obj.data = "teststringteststringteststringteststringteststring";
 		
 		obj.size = sizeof(obj.data);
-		obj.data_off = 0;
+		&obj.data_off = 0;
 		/* Allocate space for half object on one server 
 		 * using first connection and on another
 		 * Host number 0 holds first half 
@@ -85,9 +85,9 @@ int main(int argc, const char *argv[])
 				CLOG(CL_ERR, "cant reserve space for object on storage");
 												
 		/* Send half object to first node */
-		ds_put_object(&con[0],obj.id,obj.data,obj.size,obj.data_off);
+		ds_put_object(&con[0],obj.id,obj.data,obj.size,&obj.data_off);
 		/* Send half object to second node */
-		ds_put_object(&con[1],obj.id,obj.data,obj.size,(obj.data_off+sizeof(obj.data/2)));
+		ds_put_object(&con[1],obj.id,obj.data,obj.size,&obj.data_off);
 		
 			
 		crt_free(obj.id);
