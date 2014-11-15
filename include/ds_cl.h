@@ -9,9 +9,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ds_obj_id.h"
-
-#define PAGE_SIZE 4096
+#include "crtlib/include/ds_obj_id.h"
 
 struct object {
 		struct ds_obj_id id;
@@ -22,12 +20,15 @@ struct object {
 struct con_handle {
 		int	sock;
 		int con_id;
-		int state; /* active/passiv */
 };
 
+struct host {
+		char *address;
+		int  port;
+};
 
-void 			  con_handle_init(struct con_handle *connection);
-
+int 			  con_handle_init(struct con_handle *connection)
 struct con_handle ds_connect(char *ip,int port);
-
+int 			  ds_disconnect(struct con_handle *con);
 int               ds_object_put(struct con_handle handle, struct object *obj);
+void			  ds_add_host(char* ip,int port);
