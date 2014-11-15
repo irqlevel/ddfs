@@ -2,13 +2,7 @@
 
 #define PAGE_SIZE 4096
 
-struct ds_packet {
-		uint16_t         cmd;     
-		struct ds_obj_id obj_id;
-		void 			 *data;
-		uint32_t 		 data_size;
-		uint64_t 		 data_off
-};
+
 
 static int con_count = 0,host_count = 0;
 

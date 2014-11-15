@@ -14,12 +14,20 @@ struct object {
 		struct ds_obj_id id;
 		unsigned char    *data;
 		uint64_t		 data_off;
-		uint64_t         size;
+		uint32_t         size;
 };
  
 struct con_handle {
 		int	sock;
 		int con_id;
+};
+
+struct ds_packet {
+		uint16_t         cmd;     
+		struct ds_obj_id obj_id;
+		void 			 *data;
+		uint32_t 		 data_size;
+		uint64_t 		 data_off
 };
 
 int  con_handle_init(struct con_handle *connection)

@@ -14,14 +14,19 @@
 #include <utils/ucrt/include/ucrt.h>
 #include <include/ds_cl.h> /* client lib */
 
+/* Temp defines */
 #define CON_NUM  3
+#define PART_NUM 10
+#define PART_LEN 5
 
 int main(int argc, const char *argv[])
 {
 		int err = DS_E_BUF_SMALL;
-		int i;
+		int i,j,off;
 		uint64_t size;
-		struct ds_obj_id *obj_id;
+		struct object obj;
+		/* Temp. Object will hold char string and be devided in 10 parts */
+		char obj_parts[PART_NUM][PART_LEN];
 		/*
 		 * Create an array of connections 
 		 * In future there will be function for dynamic allocation
@@ -50,11 +55,11 @@ int main(int argc, const char *argv[])
 				ds_connect(&con[i],ip,port);
 		
 		/* generate object id and output it */
-		obj_id = ds_obj_id_gen();
-		if (!obj_id) {
+		obj.id = ds_obj_id_gen();
+		if (!obj.id) {
 				CLOG(CL_ERR, "cant generate obj id");
 		} else {
-				char *obj_id_s = ds_obj_id_to_str(obj_id);
+				char *obj_id_s = ds_obj_id_to_str(obj.id);
 				if (!obj_id_s) {
 						CLOG(CL_ERR, "cant convert obj id to str");
 		        } else {
@@ -64,12 +69,26 @@ int main(int argc, const char *argv[])
 		        }
 		}
 		
-		size=10000;
-		if(ds_create_object(&con[0],obj_id,size))
+		size=30;
+		/* Allocate space for our object on server using first connection*/
+		if(ds_create_object(&con[0],obj.id,size))
 				CLOG(CL_ERR, "cant reserve space for object on storage");
-		
 				
-		crt_free(obj_id);
+		/* Fill object data | len 50*/
+		obj.data="teststringteststringteststringteststringteststring";
+		
+		/* Devide object data into 10 parts */
+		off = 0;
+		for(i=0;i<PART_NUM;i++)
+				for(j=0;j<PART_LEN;j++) {
+						obj_parts[i][j] = obj.data[j+off];
+						off+=(j+1);
+				}	
+				
+		/* Send object parts to server */
+		ds_put_object(&con[i],obj.id,obj.data,obj.size,obj.data_off);
+			
+		crt_free(obj.id);
 		/* Disconnect from all hosts */
 		for(i=0;i<CON_NUM;i++)
 				ds_disconnect(&con[i].sock);
