@@ -47,24 +47,29 @@ int main(int argc, const char *argv[])
 		/* translate error code to string description */
 		CLOG(CL_INF, "err %x - %s", err, ds_error(err));
 		
-		/* Connect to all computers in network */
-		for(i=0;i<CON_NUMBER;i++)
+		/* Create maximum available connections */
+		for(i=0;i<CON_NUM;i++)
 				if (con_handle_init(&con[i]))
 						CLOG(CL_ERR, "create connection number %d failed",i);
 		
-		ds_add_host("127.0.0.1",9999);
-		host_list[0].address = ;
-		host_list[0].port = ;
-		host_list[0].address = "127.0.0.1";
-		host_list[0].port = 9999;
+		/* Fill list of available hosts in network */ 
+		ds_add_host(host_list,"127.0.0.1",9999);
+		ds_add_host(host_list,"10.0.0.186",3333);
 		
 		/* Connect to all computers in network */
-		for(i=0;i<CON_NUMBER;i++)
+		for(i=0;i<HOST_NUM;i++)
 				ds_connect(&con[i],host_list[i].address,host_list[i].port);
+		/*
+		con 1 host 1
+		con 1 host 2
+		
+		con 1 host 1
+		con 2 host 1
+		*/
 		
 		/* Disconnect from all hosts */
 		 
-		for(i=0;i<CON_NUMBER;i++)
+		for(i=0;i<CON_NUMB;i++)
 				ds_disconnect(&con[i].sock);
 		
 	

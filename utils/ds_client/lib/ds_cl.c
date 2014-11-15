@@ -10,7 +10,7 @@ struct ds_packet {
 		uint64_t 		 data_off
 };
 
-static int count = 0;
+static int con_count = 0,host_count = 0;
 
 int con_handle_init(struct con_handle *connection)
 {
@@ -29,7 +29,7 @@ int con_handle_init(struct con_handle *connection)
 		}
 }
 
-struct con_handle ds_connect(char *ip,int port)
+int ds_connect(char *ip,int port)
 {
 		struct con_handle con;
 		struct sockaddr_in serv_addr;
@@ -47,7 +47,7 @@ struct con_handle ds_connect(char *ip,int port)
 		ret=inet_aton(ip,&(serv_addr.sin_addr.s_addr));
 		if(!ret) { 
 				CLOG(CL_ERR, "ds_connect() -> inet_aton() failed");
-				goto out;
+				return 1;
 		}
 		
 		crt_memset(&(serv_addr.sin_zero),0,8);
@@ -55,7 +55,7 @@ struct con_handle ds_connect(char *ip,int port)
 		ret = connect(con.sock,(struct sockaddr*)&serv_addr,sizeof(struct sockaddr));
 		if (ret == -1) {
 				CLOG(CL_ERR, "ds_connect() -> connect() failed");
-			return -ENOTCONN;
+				return -ENOTCONN;
 		}
 		
 		return 0;
@@ -64,6 +64,13 @@ struct con_handle ds_connect(char *ip,int port)
 int ds_disconnect(struct con_handle *con)
 {
 		close(con->sock);
+}
+
+void ds_add_host(struct host hosts[],char *ip,int port)
+{
+	memcpy(hosts.address,ip,crt_strlen(ip));
+	hosts.port = port;
+	
 }
 //int ds_object_put(struct con_handle handle, struct ds_obj_id object_id, void *object_body, uint64_t object_size)
 int ds_object_put(struct con_handle *hanlde, struct object *obj) 

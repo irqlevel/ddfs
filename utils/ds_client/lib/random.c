@@ -17,10 +17,9 @@ int ds_random_init(void)
 				return -ENOMEM;
 				
 		dev_urandom = open("/dev/urandom", O_RDONLY, 0);
-		if (dev_urandom<0) {
-				fput(dev_random);
+		if (dev_urandom<0) 
 				return -ENOMEM;
-		}
+		
 		
 		return 0;
 }
