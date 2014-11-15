@@ -28,7 +28,5 @@ struct host {
 };
 
 int  con_handle_init(struct con_handle *connection)
-int  ds_connect(char *ip,int port);
+int  ds_connect(struct con_handle *con,char *ip,int port);
 int  ds_disconnect(struct con_handle *con);
-int  ds_object_put(struct con_handle handle, struct object *obj);
-void ds_add_host(char* ip,int port);

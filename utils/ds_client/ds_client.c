@@ -15,20 +15,13 @@
 #include <utils/ucrt/include/ucrt.h>
 #include <include/ds_cl.h>
 
-/* Temp defines */
 #define CON_NUM  3
-#define HOST_NUM 2
 
 int main(int argc, const char *argv[])
 {
 		int err = DS_E_BUF_SMALL;
 		int i;
 		struct ds_obj_id *obj_id;
-		/*
-		 * Create an array of hosts
-		 * In future there will be function for dynamic allocation
-		 */
-		struct host host_list[HOST_NUMBER];
 		/*
 		 * Create an array of connections 
 		 * In future there will be function for dynamic allocation
@@ -52,23 +45,10 @@ int main(int argc, const char *argv[])
 				if (con_handle_init(&con[i]))
 						CLOG(CL_ERR, "create connection number %d failed",i);
 		
-		/* Fill list of available hosts in network */ 
-		ds_add_host(host_list,"127.0.0.1",9999);
-		ds_add_host(host_list,"10.0.0.186",3333);
-		
 		/* Connect to all computers in network */
-		for(i=0;i<HOST_NUM;i++)
-				ds_connect(&con[i],host_list[i].address,host_list[i].port);
-		/*
-		con 1 host 1
-		con 1 host 2
-		
-		con 1 host 1
-		con 2 host 1
-		*/
-		
+		for(i=0;i<CON_NUM;i++)
+				ds_connect(&con[i],ip,port);
 		/* Disconnect from all hosts */
-		 
 		for(i=0;i<CON_NUMB;i++)
 				ds_disconnect(&con[i].sock);
 		
