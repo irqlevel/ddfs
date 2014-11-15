@@ -16,20 +16,20 @@
 
 /* Temp defines */
 #define CON_NUM  3
-#define PART_NUM 10
 #define PART_LEN 5
 
 int main(int argc, const char *argv[])
 {
 		int err = DS_E_BUF_SMALL;
-		int i,j,off;
-		uint64_t size;
+		int i,j;
+		uint64_t size,off;
 		struct object obj;
-		/* Temp. Object will hold char string and be devided in 10 parts */
-		char obj_parts[PART_NUM][PART_LEN];
 		/*
-		 * Create an array of connections 
+		 * Network consist of 4 hosts 
+		 * create 3 lenght array for connections 
 		 * In future there will be function for dynamic allocation
+		 * every time computer connect to the network and become neighbour
+		 * con_handle struct will be added */
 		 */
 		struct con_handle con[CON_NUMBER]; 
 		
@@ -50,9 +50,9 @@ int main(int argc, const char *argv[])
 				if (con_handle_init(&con[i]))
 						CLOG(CL_ERR, "create connection number %d failed",i);
 		
-		/* Connect to all computers in network */
-		for(i=0;i<CON_NUM;i++)
-				ds_connect(&con[i],ip,port);
+		/* Connect to two neighbours in network group */
+		ds_connect(&con[0],"192.168.1.200",9999);
+		ds_connect(&con[1],"192.168.1.245",8700);
 		
 		/* generate object id and output it */
 		obj.id = ds_obj_id_gen();
@@ -69,24 +69,26 @@ int main(int argc, const char *argv[])
 		        }
 		}
 		
-		size=30;
-		/* Allocate space for our object on server using first connection*/
-		if(ds_create_object(&con[0],obj.id,size))
-				CLOG(CL_ERR, "cant reserve space for object on storage");
-				
-		/* Fill object data | len 50*/
-		obj.data="teststringteststringteststringteststringteststring";
+		/* Fill object data | lenght is 50*/
+		obj.data = "teststringteststringteststringteststringteststring";
 		
-		/* Devide object data into 10 parts */
-		off = 0;
-		for(i=0;i<PART_NUM;i++)
-				for(j=0;j<PART_LEN;j++) {
-						obj_parts[i][j] = obj.data[j+off];
-						off+=(j+1);
-				}	
-				
-		/* Send object parts to server */
-		ds_put_object(&con[i],obj.id,obj.data,obj.size,obj.data_off);
+		obj.size = sizeof(obj.data);
+		obj.data_off = 0;
+		/* Allocate space for half object on one server 
+		 * using first connection and on another
+		 * Host number 0 holds first half 
+		 * Host number 1 holds second
+		 */
+		if(ds_create_object(&con[0],obj.id,(sizeof(obj.data)/2)))
+				CLOG(CL_ERR, "cant reserve space for object on storage");
+		if(ds_create_object(&con[1],obj.id,(sizeof(obj.data)/2)))
+				CLOG(CL_ERR, "cant reserve space for object on storage");
+												
+		/* Send half object to first node */
+		ds_put_object(&con[0],obj.id,obj.data,obj.size,obj.data_off);
+		/* Send half object to second node */
+		ds_put_object(&con[1],obj.id,obj.data,obj.size,(obj.data_off+sizeof(obj.data/2)));
+		
 			
 		crt_free(obj.id);
 		/* Disconnect from all hosts */
