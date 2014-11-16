@@ -10,6 +10,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+struct ds_packet {
+		uint16_t         cmd; /* (PUT = 1, GET = 2, DELETE = 3, DISCONNECT = 4)  */  
+		struct ds_obj_id obj_id;
+		char 			 data[PAGE_SIZE];
+		uint32_t 		 data_size;
+		uint64_t 		 data_off
+};
+
 struct object {
 		struct ds_obj_id id;
 		char             *data;

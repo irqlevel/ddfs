@@ -10,13 +10,6 @@
 #define CMD_DISCONNECT 4
 /* Packet commands */
 
-struct ds_packet {
-		uint16_t         cmd; /* (PUT = 1, GET = 2, DELETE = 3, DISCONNECT = 4)  */  
-		struct ds_obj_id obj_id;
-		char 			 data[PAGE_SIZE];
-		uint32_t 		 data_size;
-		uint64_t 		 data_off
-};
 static int con_count = 0;
 
 int con_handle_init(struct con_handle *connection)
