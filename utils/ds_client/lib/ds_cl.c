@@ -2,15 +2,18 @@
 
 #define PAGE_SIZE      4096
 #define PART_NUM       10
+#define PART_LEN	   5
+/* Packet commands */
 #define CMD_PUT        1
 #define CMD_GET        2
 #define CMD_DELETE 	   3
 #define CMD_DISCONNECT 4
+/* Packet commands */
 
 struct ds_packet {
 		uint16_t         cmd; /* (PUT = 1, GET = 2, DELETE = 3, DISCONNECT = 4)  */  
 		struct ds_obj_id obj_id;
-		void 			 *data;
+		char 			 data[PAGE_SIZE];
 		uint32_t 		 data_size;
 		uint64_t 		 data_off
 };
@@ -20,7 +23,7 @@ int con_handle_init(struct con_handle *connection)
 {
 		int sock;
 		
-		count++;
+		con_count++;
 		sock = socket(AF_INET,SOCK_STREAM,0);
 		if (sock == -1) {
 				CLOG(CL_ERR, "con_handle_init() -> socket() failed");
@@ -28,7 +31,7 @@ int con_handle_init(struct con_handle *connection)
 		}
 		else {
 				connection->sock = sock;
-				connection->con_id = count;
+				connection->con_id = con_count;
 				return 0;
 		}
 }
@@ -54,7 +57,6 @@ int ds_connect(struct con_handle *con,char *ip,int port)
 				CLOG(CL_ERR, "ds_connect() -> connect() failed");
 				return -ENOTCONN;
 		}
-		
 		return 0;
 } 
 
@@ -66,26 +68,26 @@ int  ds_create_object(struct con_handle *con, struct ds_obj_id obj_id, uint64_t 
 
 int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint32_t data_size, uint64_t *off)
 {
-		int i;
+		int i,j;
+		/* Create struct for each part of object, for test default 5 */
 		struct ds_packet parts[PART_NUM];
-		
-		for(i=0;i<PART_NUM;i++) {
-				parts[i].cmd = CMD_PUT; 
+		/* 
+		 * Devide object into parts according to data size and offset 
+		 * Offset incremented each step by lenght of object part (5)
+		 */
+		for(i=0;*off<data_size;i++,*off+=PART_LEN) {
+				parts[i].cmd = CMD_PUT; /* We send data to server */
 				parts[i].obj_id = id;
-				parts[i].data[i] = data[i+*off];
-				parts[i].data_size = data_size;
-				parts[i].data_off = off;
+				for(j=0;j<PART_LEN;j++) 
+						parts[i].data[j] = data[j+*off];
+				parts[i].data_size = sizeof(parts[i]);
+				/* Each part holds place where data start in specific object */
+				parts[i].data_off = *off;
 		}
-		/* Devide object data into 10 parts | part lenght is 5*/
-		off = 0;
-		for(i=0;i<PART_NUM;i++)
-				for(j=0;j<strlen(obj_parts[i]);j++) {
-						obj_parts[i][j] = data[j+off];
-						off+=(j+1);
-				}
-				
-		bytes_sent=send(sock,msg,len,0);
-			
+		/* Send each part of object to server */
+		for(j=0;j<(i-1);j++)
+				if((send(sock,parts[j],sizeof(parts[j]),0))<0)
+							CLOG(CL_ERR, "ds_put_object() -> packet number %d failed to send to server",(j+1));
 		return 0;
 }
 

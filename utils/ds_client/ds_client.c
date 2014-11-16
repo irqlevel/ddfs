@@ -16,23 +16,19 @@
 
 /* Temp defines */
 #define CON_NUM  3
-#define PART_LEN 5
 
 int main(int argc, const char *argv[])
 {
 		int err = DS_E_BUF_SMALL;
 		int i,j;
-		uint64_t size,off;
 		struct object obj;
 		/*
-		 * Network consist of 4 hosts 
-		 * create 3 lenght array for connections 
+		 * Create an array for connections 
 		 * In future there will be function for dynamic allocation
-		 * every time computer connect to the network and become neighbour
+		 * every time computer connects to the network and becomes neighbour
 		 * con_handle struct will be added */
 		 */
 		struct con_handle con[CON_NUMBER]; 
-		
 		/* 
 	     * set CLOG log path : NULL and log name ds_client.log
 	     * NULL means use current working dir as path
@@ -71,9 +67,8 @@ int main(int argc, const char *argv[])
 		
 		/* Fill object data | lenght is 50*/
 		obj.data = "teststringteststringteststringteststringteststring";
-		
 		obj.size = sizeof(obj.data);
-		&obj.data_off = 0;
+		obj.data_off = 0;
 		/* Allocate space for half object on one server 
 		 * using first connection and on another
 		 * Host number 0 holds first half 
@@ -85,11 +80,10 @@ int main(int argc, const char *argv[])
 				CLOG(CL_ERR, "cant reserve space for object on storage");
 												
 		/* Send half object to first node */
-		ds_put_object(&con[0],obj.id,obj.data,obj.size,&obj.data_off);
+		ds_put_object(&con[0],obj.id,obj.data,(obj.size/2),&obj.data_off);
 		/* Send half object to second node */
-		ds_put_object(&con[1],obj.id,obj.data,obj.size,&obj.data_off);
+		ds_put_object(&con[1],obj.id,obj.data,(obj.size/2),&obj.data_off);
 		
-			
 		crt_free(obj.id);
 		/* Disconnect from all hosts */
 		for(i=0;i<CON_NUM;i++)

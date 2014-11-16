@@ -1,4 +1,3 @@
-
 int dev_random,dev_urandom;
 
 int ds_random_buf_read(void *buf, size_t len, int urandom)
@@ -19,8 +18,6 @@ int ds_random_init(void)
 		dev_urandom = open("/dev/urandom", O_RDONLY, 0);
 		if (dev_urandom<0) 
 				return -ENOMEM;
-		
-		
 		return 0;
 }
 
