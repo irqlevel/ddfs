@@ -12,7 +12,7 @@
 
 #include <crtlib/include/crtlib.h>
 #include <utils/ucrt/include/ucrt.h>
-#include <include/ds_cl.h> /* client lib */
+#include <include/ds_client.h> /* client lib */
 
 /* Temp defines */
 #define CON_NUM  3
@@ -40,11 +40,6 @@ int main(int argc, const char *argv[])
 		CLOG(CL_INF, "Hello from ds client");
 		/* translate error code to string description */
 		CLOG(CL_INF, "err %x - %s", err, ds_error(err));
-		
-		/* Create maximum available connections */
-		for(i=0;i<CON_NUM;i++)
-				if (con_handle_init(&con[i]))
-						CLOG(CL_ERR, "create connection number %d failed",i);
 		
 		/* Connect to two neighbours in network group */
 		ds_connect(&con[0],"192.168.1.200",9999);
@@ -74,20 +69,18 @@ int main(int argc, const char *argv[])
 		 * Host number 0 holds first half 
 		 * Host number 1 holds second
 		 */
+		 /*
+		  * Not implemented
 		if(ds_create_object(&con[0],obj.id,(sizeof(obj.data)/2)))
 				CLOG(CL_ERR, "cant reserve space for object on storage");
-		if(ds_create_object(&con[1],obj.id,(sizeof(obj.data)/2)))
-				CLOG(CL_ERR, "cant reserve space for object on storage");
-												
-		/* Send half object to first node */
-		ds_put_object(&con[0],obj.id,obj.data,(obj.size/2),&obj.data_off);
-		/* Send half object to second node */
-		ds_put_object(&con[1],obj.id,obj.data,(obj.size/2),&obj.data_off);
+		*/										
+		/* Send object to first node */
+		ds_put_object(&con[0],obj.id,obj.data,obj.size,&obj.data_off);
 		
 		crt_free(obj.id);
 		/* Disconnect from all hosts */
 		for(i=0;i<CON_NUM;i++)
-				ds_disconnect(&con[i].sock);
+				ds_close(&con[i].sock);
 		
 		return 0;
 }

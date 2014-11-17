@@ -1,22 +1,14 @@
-#include "ds_cl.h"
+#include "ds_client.h"
+#include "ds_packet.h"
 
 #define PAGE_SIZE      4096
 #define PART_NUM       10
 #define PART_LEN	   5
-/* Packet commands */
-#define CMD_PUT        1
-#define CMD_GET        2
-#define CMD_DELETE 	   3
-#define CMD_DISCONNECT 4
-/* Packet commands */
-
-static int con_count = 0;
 
 int con_handle_init(struct con_handle *connection)
 {
 		int sock;
 		
-		con_count++;
 		sock = socket(AF_INET,SOCK_STREAM,0);
 		if (sock == -1) {
 				CLOG(CL_ERR, "con_handle_init() -> socket() failed");
@@ -24,7 +16,6 @@ int con_handle_init(struct con_handle *connection)
 		}
 		else {
 				connection->sock = sock;
-				connection->con_id = con_count;
 				return 0;
 		}
 }
@@ -33,7 +24,10 @@ int ds_connect(struct con_handle *con,char *ip,int port)
 {
 		struct sockaddr_in serv_addr;
 		int32_t ret;
-	
+		
+		if (con_handle_init(con))
+				CLOG(CL_ERR, "ds_connect() -> create connection failed");
+		
 		serv_addr.sin_family = AF_INET;
 		serv_addr.sin_port = htons(port);
 	
@@ -53,9 +47,9 @@ int ds_connect(struct con_handle *con,char *ip,int port)
 		return 0;
 } 
 
-/* Not reay yet */
 int  ds_create_object(struct con_handle *con, struct ds_obj_id obj_id, uint64_t obj_size);
-{
+{		
+		/* Not implemented */
 		return 0;
 }
 
@@ -84,7 +78,19 @@ int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint3
 		return 0;
 }
 
-int ds_disconnect(struct con_handle *con)
+int  ds_delete_object(struct con_handle *con,struct ds_obj_id *id)
+{
+		/* Not implemented */
+		return 0;
+}
+
+int  ds_get_object(struct con_handle *con,struct ds_obj_id id, void *data, uint32_t data_size, uint64_t off)
+{
+		/* Not implemented */
+		return 0;
+}
+
+int ds_close(struct con_handle *con)
 {
 		close(con->sock);
 }
