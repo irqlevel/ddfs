@@ -14,7 +14,6 @@
 #include <utils/ucrt/include/ucrt.h>
 #include <include/ds_client.h> /* client lib */
 
-/* Temp defines */
 #define CON_NUM  3
 
 int main(int argc, const char *argv[])
@@ -64,11 +63,7 @@ int main(int argc, const char *argv[])
 		obj.data = "teststringteststringteststringteststringteststring";
 		obj.size = sizeof(obj.data);
 		obj.data_off = 0;
-		/* Allocate space for half object on one server 
-		 * using first connection and on another
-		 * Host number 0 holds first half 
-		 * Host number 1 holds second
-		 */
+		
 		 /*
 		  * Not implemented
 		if(ds_create_object(&con[0],obj.id,(sizeof(obj.data)/2)))

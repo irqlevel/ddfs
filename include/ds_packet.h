@@ -1,5 +1,7 @@
 #pragma once
 
+#define PAGE_SIZE      4096
+
 enum packet_cmd
 {
 		DS_PKT_OBJ_PUT, 
