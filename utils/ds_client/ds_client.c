@@ -44,6 +44,13 @@ int main(int argc, const char *argv[])
 		ds_connect(&con[0],"192.168.1.200",9999);
 		ds_connect(&con[1],"192.168.1.245",8700);
 		
+		
+		/*
+		 * Not implemented
+		if(ds_create_object(&con[0],&obj.id,sizeof(obj.data)))
+				CLOG(CL_ERR, "cant reserve space for object on storage");
+		*/	
+		
 		/* generate object id and output it */
 		obj.id = ds_obj_id_gen();
 		if (!obj.id) {
@@ -63,14 +70,10 @@ int main(int argc, const char *argv[])
 		obj.data = "teststringteststringteststringteststringteststring";
 		obj.size = sizeof(obj.data);
 		obj.data_off = 0;
-		
-		 /*
-		  * Not implemented
-		if(ds_create_object(&con[0],obj.id,(sizeof(obj.data)/2)))
-				CLOG(CL_ERR, "cant reserve space for object on storage");
-		*/										
+											
 		/* Send object to first node */
-		ds_put_object(&con[0],obj.id,obj.data,obj.size,&obj.data_off);
+		if(!ds_put_object(&con[0],&obj.id,obj.data,obj.size,&obj.data_off))
+				CLOG(CL_INF, "offset after sending object is %llu",data_off);
 		
 		crt_free(obj.id);
 		/* Disconnect from all hosts */
