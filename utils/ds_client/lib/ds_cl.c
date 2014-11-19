@@ -25,8 +25,10 @@ int ds_connect(struct con_handle *con,char *ip,int port)
 		struct sockaddr_in serv_addr;
 		int32_t ret;
 		
-		if (con_handle_init(con))
+		if (con_handle_init(con)) {
 				CLOG(CL_ERR, "ds_connect() -> create connection failed");
+				return 1;
+		}
 		
 		serv_addr.sin_family = AF_INET;
 		serv_addr.sin_port = htons(port);
@@ -34,7 +36,7 @@ int ds_connect(struct con_handle *con,char *ip,int port)
 		ret=inet_aton(ip,&(serv_addr.sin_addr.s_addr));
 		if(!ret) { 
 				CLOG(CL_ERR, "ds_connect() -> inet_aton() failed, invalid address");
-				return 1;
+				return -EFAULT;
 		}
 		
 		crt_memset(&(serv_addr.sin_zero),0,8);
@@ -46,13 +48,6 @@ int ds_connect(struct con_handle *con,char *ip,int port)
 		}
 		return 0;
 } 
-
-int  ds_create_object(struct con_handle *con, struct ds_obj_id obj_id, uint64_t obj_size);
-{		
-		/* Not implemented */
-		return 0;
-}
-
 int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint32_t data_size, uint64_t *off)
 {
 		int i,j;
@@ -62,34 +57,37 @@ int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint3
 		 * Devide object into parts according to data size and offset 
 		 * Offset incremented each step by lenght of object part (5)
 		 */
-		for(i=0;*off<data_size;i++,*off+=PART_LEN) {
+		for(i=0;*off<=data_size;i++,*off+=PART_LEN) {
 				parts[i].cmd = CMD_PUT; /* We send data to server */
 				parts[i].obj_id = id;
 				for(j=0;j<PART_LEN;j++) 
-						parts[i].data[j] = data[j+*off];
+						parts[i].data[j+*off] = data[j+*off];
 				parts[i].data_size = sizeof(parts[i]);
 				/* Each part holds place where data start in specific object */
 				parts[i].data_off = *off;
 		}
-		/* Send each part of object to server */
+		/* Send each part of object to the server */
 		for(j=0;j<(i-1);j++)
 				if((send(sock,parts[j],sizeof(parts[j]),0))<0)
-							CLOG(CL_ERR, "ds_put_object() -> packet number %d failed to send to server",(j+1));
+							CLOG(CL_ERR, "ds_put_object() -> packet number %d failed to send to server",j);
 		return 0;
 }
 
+int  ds_create_object(struct con_handle *con, struct ds_obj_id obj_id, uint64_t obj_size);
+{		
+		/* Not implemented */
+		return -ENOSYS;
+}
 int  ds_delete_object(struct con_handle *con,struct ds_obj_id *id)
 {
 		/* Not implemented */
-		return 0;
+		return -ENOSYS;
 }
-
 int  ds_get_object(struct con_handle *con,struct ds_obj_id id, void *data, uint32_t data_size, uint64_t off)
 {
 		/* Not implemented */
-		return 0;
+		return -ENOSYS;
 }
-
 int ds_close(struct con_handle *con)
 {
 		close(con->sock);
