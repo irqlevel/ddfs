@@ -50,28 +50,25 @@ int ds_connect(struct con_handle *con,char *ip,int port)
 } 
 int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint64_t data_size, uint64_t *off)
 {
-		int i,j;
-		/* Create struct for each part of object, for test default 5 */
-		struct ds_packet parts[PART_NUM];
-		/* 
-		 * Devide object into parts according to data size and offset 
-		 * Offset incremented each step by lenght of object part (5)
-		 */
-		for(i=0;*off<=data_size;i++,*off+=PART_LEN) {
-				parts[i].cmd = DS_PKT_OBJ_PUT; /* We send data to server */
-				parts[i].obj_id = &id;
-				for(j=0;j<PART_LEN;j++) {
-						parts[i].data = (char *)malloc(sizeof(char)*PART_LEN);
-						parts[i].data[j+*off] = data[j+*off];
-				}
-				parts[i].data_size = sizeof(parts[i]);
-				/* Each part holds place where data start in specific object */
-				parts[i].data_off = *off;
+		struct ds_packet *pack;
+		
+		pack = (struct ds_packet*)crt_malloc(sizeof(struct ds_packet));
+		pack->data = (char*)crt_malloc(sizeof(char)*data_size);
+		
+		pack.cmd = DS_PKT_OBJ_PUT;
+		pack->data = data;
+		pack.data_off=&off;
+		pack.obj_id=&id;
+		pack.data_size = data_size;
+		
+		if((send(sock,pack,sizeof(struct ds_packet),0))<0) {
+				CLOG(CL_ERR, "ds_put_object() -> packet struct failed to send to server");
+				return -DS_E_PUT_FLD;
 		}
-		/* Send each part of object to the server */
-		for(j=0;j<i;j++)
-				if((send(sock,parts[j],sizeof(parts[j]),0))<0)
-							CLOG(CL_ERR, "ds_put_object() -> packet number %d failed to send to server",j);
+		if((send(sock,pack->data,pack.data_size,0))<0) {
+				CLOG(CL_ERR, "ds_put_object() -> packet object data failed to send to server");
+				return -DS_E_PUT_FLD;
+		}
 		return 0;
 }
 
