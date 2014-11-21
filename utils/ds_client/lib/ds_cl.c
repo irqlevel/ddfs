@@ -99,7 +99,7 @@ int  ds_delete_object(struct con_handle *con,struct ds_obj_id obj_id)
 		/* Not implemented */
 		return -ENOSYS;
 }
-int  ds_get_object(struct con_handle *con,struct ds_obj_id id, void *data, uint64_t *data_size, uint64_t off)
+int  ds_get_object(struct con_handle *con,struct ds_obj_id id, void *data, uint64_t *data_size, uint64_t *off)
 {
 		recv(*con->sock,data,data_size,0);
 		 

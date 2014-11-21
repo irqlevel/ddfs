@@ -45,7 +45,7 @@ int main(int argc, const char *argv[])
 		/* Create two objects */
 		client_obj = crt_malloc(sizeof(struct object));
 	    income _obj = crt_malloc(sizeof(struct object));
-		
+		income_obj.data=crt_malloc(65536);
 		/* Connect to two neighbours in network group */
 		ds_connect(&con[0],"192.168.1.200",9999);
 		ds_connect(&con[1],"192.168.1.245",8700);
