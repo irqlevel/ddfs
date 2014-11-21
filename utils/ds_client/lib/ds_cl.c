@@ -53,7 +53,8 @@ int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint6
 		struct ds_packet *pack;
 		
 		pack = (struct ds_packet*)crt_malloc(sizeof(struct ds_packet));
-		pack->data = (char*)crt_malloc(sizeof(char)*data_size);
+		pack->data = crt_malloc(data_size);
+		pack->obj_id = (struct ds_obj_id*)crt_malloc(sizeof(struct ds_obj_id)); 
 		
 		pack.cmd = DS_PKT_OBJ_PUT;
 		pack->data = data;
@@ -62,14 +63,24 @@ int  ds_put_object(struct con_handle *con,struct ds_obj_id id, void *data, uint6
 		pack.data_size = data_size;
 		
 		if((send(sock,pack,sizeof(struct ds_packet),0))<0) {
-				CLOG(CL_ERR, "ds_put_object() -> packet struct failed to send to server");
+				CLOG(CL_ERR, "ds_put_object() -> packet metadata failed to send");
+				crt_free(pack->obj_id);
+				crt_free(pack->data);
+				crt_free(pack);
 				return -DS_E_PUT_FLD;
-		}
-		if((send(sock,pack->data,pack.data_size,0))<0) {
-				CLOG(CL_ERR, "ds_put_object() -> packet object data failed to send to server");
+		} else {
+				if((send(sock,pack->data,pack.data_size,0))<0) {
+				CLOG(CL_ERR, "ds_put_object() -> packet object data failed to send");
+				crt_free(pack->obj_id);
+				crt_free(pack->data);
+				crt_free(pack);
 				return -DS_E_PUT_FLD;
-		}
+		} 
+		crt_free(pack->obj_id);
+		crt_free(pack->data);
+		crt_free(pack); 
 		return 0;
+		
 }
 
 int  ds_create_object(struct con_handle *con, struct ds_obj_id obj_id, uint64_t obj_size);
@@ -88,10 +99,11 @@ int  ds_delete_object(struct con_handle *con,struct ds_obj_id obj_id)
 		/* Not implemented */
 		return -ENOSYS;
 }
-int  ds_get_object(struct con_handle *con,struct ds_obj_id id, void *data, uint64_t data_size, uint64_t off)
+int  ds_get_object(struct con_handle *con,struct ds_obj_id id, void *data, uint64_t *data_size, uint64_t off)
 {
-		/* Not implemented */
-		return -ENOSYS;
+		recv(*con->sock,data,data_size,0);
+		 
+		return 0;
 }
 int ds_close(struct con_handle *con)
 {
