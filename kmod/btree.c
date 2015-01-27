@@ -687,10 +687,34 @@ static int
 btree_node_find_key_index(struct btree_node *node,
 	struct ds_obj_id *key)
 {
-	int i = 0;
+	/* temporary pretend that keys are sorted */
+	u32 first = 0;
+	u32 last = node->nr_keys;
+	u64  mid;
+	/* if key > last element */
+	if (btree_cmp_key(key, &node->keys[node->nr_keys-1]) > 0) 
+		return NOTFOUND;
+	else if (btree_cmp_key(key, &node->keys[0]) < 0)
+		return NOTFOUND;
+
+	while (first < last) {
+		mid = first + (last - first) / 2;
+
+		if (key->high <= node->keys[mid]->high)
+			last = mid; /* WARNING assign u64 to u32, ask irqlevel what to do with declarations :) */
+		else
+			first = mid + 1; 
+	}
+
+	if (node->keys[last]->high == key->high)
+		return FOUND;
+	else
+		return NOTFOUND;
+/*
 	while (i < node->nr_keys && btree_cmp_key(key, &node->keys[i]) > 0)
 		i++;
 	return i;
+*/
 }
 
 static int btree_node_insert_nonfull(
