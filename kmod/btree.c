@@ -674,61 +674,81 @@ static void btree_node_split_child(struct btree_node *node,
 
 static int btree_node_has_key(struct btree_node *node, struct ds_obj_id *key)
 {
+	/*
+	int i;
+	KLOG(KL_INF,"thatskriptkid - node->nr_keys = %d",node->nr_keys);
+for (i = 0; i < node->nr_keys; i++) {
+if (0 == btree_cmp_key(&node->keys[i], key))
+return i;
+}
+return -1;
+*/
+	
 	u32 first = 0;
-	u32 last = node->nr_keys - 1;
+	u32 last = node->nr_keys;
 	u32  mid;
+	
 	/* check if key within range */
-	if (btree_cmp_key(key, &node->keys[node->nr_keys-1]) > 0 || btree_cmp_key(key, &node->keys[0]) < 0) 
+	
+	// TODO: ADD CHECKING if nr_keys==0 then return -1
+	/*
+	if (btree_cmp_key(key, &node->keys[node->nr_keys-1]) > 0) 
 		return -1;
-
-	while (first <= last) {
+	KLOG(KL_INF,"pass 1 check");
+	if (btree_cmp_key(key, &node->keys[0]) < 0)
+		return -1;
+	KLOG(KL_INF,"pass 2 check");
+	*/
+	while (first < last) {
 		mid = first + (last - first) / 2;
-		
-		if (!btree_cmp_key(key,&node->keys[mid]))
+		if (0 == btree_cmp_key(key,&node->keys[mid])) {
+			
 			return mid;
+		}
 
 		if (btree_cmp_key(key,&node->keys[mid]) < 0)
-			last = mid - 1; 
+			last = mid; 
 		else
 			first = mid + 1; 
 	}
 
 	return -1;
-/*
-	int i;
-
-	for (i = 0; i < node->nr_keys; i++) {
-		if (0 == btree_cmp_key(&node->keys[i], key))
-			return i;
-	}
-	return -1;
-*/
+	
 }
 
 static int
 btree_node_find_key_index(struct btree_node *node,
 	struct ds_obj_id *key)
 {
+	/*
+	int i = 0;
+while (i < node->nr_keys && btree_cmp_key(key, &node->keys[i]) > 0)
+i++;
+return i;
+*/
 	u32 first = 0;
-	u32 last = node->nr_keys - 1;
-	u32  mid;
-	/* check if key within range */
-	if (btree_cmp_key(key, &node->keys[node->nr_keys-1]) > 0 || btree_cmp_key(key, &node->keys[0]) < 0) 
-		return -1;
+	u32 last = node->nr_keys;
+	u32  mid = 0;
 
-	while (first <= last) {
+	/* check if key within range */
+/*
+	if ((btree_cmp_key(key, &node->keys[node->nr_keys-1]) > 0) || (btree_cmp_key(key, &node->keys[0]) < 0)) 
+		return -1;
+*/
+	while (first < last) {
 		mid = first + (last - first) / 2;
 		
 		if (!btree_cmp_key(key,&node->keys[mid]))
 			return mid;
 
 		if (btree_cmp_key(key,&node->keys[mid]) < 0)
-			last = mid - 1; 
+			last = mid; 
 		else
 			first = mid + 1; 
 	}
 
-	return -1;
+	return mid;
+
 }
 
 static int btree_node_insert_nonfull(
