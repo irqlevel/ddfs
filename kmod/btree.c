@@ -674,6 +674,27 @@ static void btree_node_split_child(struct btree_node *node,
 
 static int btree_node_has_key(struct btree_node *node, struct ds_obj_id *key)
 {
+	u32 first = 0;
+	u32 last = node->nr_keys - 1;
+	u32  mid;
+	/* check if key within range */
+	if (btree_cmp_key(key, &node->keys[node->nr_keys-1]) > 0 || btree_cmp_key(key, &node->keys[0]) < 0) 
+		return -1;
+
+	while (first <= last) {
+		mid = first + (last - first) / 2;
+		
+		if (!btree_cmp_key(key,&node->keys[mid]))
+			return mid;
+
+		if (btree_cmp_key(key,&node->keys[mid]) < 0)
+			last = mid - 1; 
+		else
+			first = mid + 1; 
+	}
+
+	return -1;
+/*
 	int i;
 
 	for (i = 0; i < node->nr_keys; i++) {
@@ -681,40 +702,33 @@ static int btree_node_has_key(struct btree_node *node, struct ds_obj_id *key)
 			return i;
 	}
 	return -1;
+*/
 }
 
 static int
 btree_node_find_key_index(struct btree_node *node,
 	struct ds_obj_id *key)
 {
-	/* temporary pretend that keys are sorted */
 	u32 first = 0;
-	u32 last = node->nr_keys;
-	u64  mid;
-	/* if key > last element */
-	if (btree_cmp_key(key, &node->keys[node->nr_keys-1]) > 0) 
-		return NOTFOUND;
-	else if (btree_cmp_key(key, &node->keys[0]) < 0)
-		return NOTFOUND;
+	u32 last = node->nr_keys - 1;
+	u32  mid;
+	/* check if key within range */
+	if (btree_cmp_key(key, &node->keys[node->nr_keys-1]) > 0 || btree_cmp_key(key, &node->keys[0]) < 0) 
+		return -1;
 
-	while (first < last) {
+	while (first <= last) {
 		mid = first + (last - first) / 2;
+		
+		if (!btree_cmp_key(key,&node->keys[mid]))
+			return mid;
 
-		if (key->high <= node->keys[mid]->high)
-			last = mid; /* WARNING assign u64 to u32, ask irqlevel what to do with declarations :) */
+		if (btree_cmp_key(key,&node->keys[mid]) < 0)
+			last = mid - 1; 
 		else
 			first = mid + 1; 
 	}
 
-	if (node->keys[last]->high == key->high)
-		return FOUND;
-	else
-		return NOTFOUND;
-/*
-	while (i < node->nr_keys && btree_cmp_key(key, &node->keys[i]) > 0)
-		i++;
-	return i;
-*/
+	return -1;
 }
 
 static int btree_node_insert_nonfull(
