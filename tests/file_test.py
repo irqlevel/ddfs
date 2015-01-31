@@ -144,6 +144,6 @@ if __name__ == "__main__":
 	if len(res) != 0:
 		log.error("FAILED: broken files: %s" % res)
 	else:
-		log.info("PASSED: there are not broken files!")
+		log.info("PASSED: there are no broken files!")
 
 	cleanup()
