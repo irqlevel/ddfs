@@ -672,26 +672,74 @@ static void btree_node_split_child(struct btree_node *node,
 		new, new->nr_keys);
 }
 
+static int btree_node_key_probably_inside(struct btree_node *node,struct ds_obj_id *key)
+{
+	if (0 == node->nr_keys)
+		return 0; 
+	else if ((btree_cmp_key(key,&node->keys[node->nr_keys-1]) > 0) 
+		|| (btree_cmp_key(key,&node->keys[0]) < 0))
+		return 0;
+	return 1;
+}
+
 static int btree_node_has_key(struct btree_node *node, struct ds_obj_id *key)
 {
-	int i;
+	u32 start = 0;
+	u32 end = node->nr_keys;
+	u32 mid;
+	int cmd;
 
-	for (i = 0; i < node->nr_keys; i++) {
-		if (0 == btree_cmp_key(&node->keys[i], key))
-			return i;
+	if (!btree_node_key_probably_inside(node,key));
+		return -1;
+
+	while (start < end) {
+		mid = (start + end) / 2;
+
+		cmd = btree_cmp_key(key,&node->keys[mid]);
+
+		if (!cmd)
+			return mid;
+		else if (cmd < 0)
+			end = mid;
+		else
+			start = mid + 1;
 	}
+
 	return -1;
 }
 
-static int
-btree_node_find_key_index(struct btree_node *node,
+static int btree_node_find_key_index(struct btree_node *node,
 	struct ds_obj_id *key)
 {
-	int i = 0;
-	while (i < node->nr_keys && btree_cmp_key(key, &node->keys[i]) > 0)
-		i++;
-	return i;
+	u32 start = 0;
+	u32 end = node->nr_keys;
+	u32 mid;
+	int cmd;
+
+	if (0 == node->nr_keys)
+		return 0; 
+	else if (btree_cmp_key(key,&node->keys[end-1]) > 0)
+		return end;
+	else if (btree_cmp_key(key,&node->keys[start]) < 0)
+		return 0;
+
+	while (start < end) {
+		mid = (start + end) / 2;
+
+		cmd = btree_cmp_key(key,&node->keys[mid]);
+
+		if (!cmd)
+			return mid;
+		else if (cmd < 0)
+			end = mid;
+		else
+			start = mid + 1;
+	}
+
+	return end;
 }
+
+
 
 static int btree_node_insert_nonfull(
 	struct btree_node *first,
