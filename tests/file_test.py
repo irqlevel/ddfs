@@ -7,7 +7,7 @@ import hashlib
 import random
 import shutil
 import logging
-from multiprocessing import Process,Queue
+from multiprocessing import Process
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 CURR_DIR = os.path.abspath(currentdir)
@@ -20,7 +20,6 @@ TMP_FILE_MAX_SIZE = 10485760 #bytes in 10MB
 
 IN_TMP_DIR = ""
 OUT_TMP_DIR = ""
-FILES_TO_HASH = Queue()
 
 DS_CLIENT_PUT_CMD = settings.CLIENT_PATH + " put -s 0.0.0.0 -p 9111 -f "
 DS_CLIENT_GET_CMD = settings.CLIENT_PATH + " get -s 0.0.0.0 -p 9111 -i " 
@@ -74,20 +73,20 @@ def get_file(out_file_name):
 
 def proc_routine(file_count):
 	
+	i = 0
 	obj_ids = []
 	global IN_TMP_DIR
 	global OUT_TMP_DIR
-	global FILES_TO_HASH
-
+	
 	file_names = gen_tmp_files(file_count)
-	FILES_TO_HASH.put(file_names)
-
+	
 	for f in file_names:
 		obj_ids.append(put_file(IN_TMP_DIR+f))
-	
-	for i in range(len(obj_ids)):
-			get_file(obj_ids.pop()+" -f "+OUT_TMP_DIR+file_names[i])
-			
+		
+	for obj_id in obj_ids:
+			get_file(obj_id+" -f "+OUT_TMP_DIR+file_names[i])
+			i+=1
+
 
 def hash_large_file(path):
 	
@@ -103,15 +102,16 @@ def hash_large_file(path):
 	return buf
 
 
-def check_file_hash(files_to_hash):
+def check_file_hash():
 	
 	global IN_TMP_DIR
 	global OUT_TMP_DIR
-	
 	broken_files = []
-
-	for filename in files_to_hash:
+	
+	for root,dirs,files in os.walk(IN_TMP_DIR):
+		in_files = files
 		
+	for filename in in_files:
 		path_to_in_file = IN_TMP_DIR + filename
 		path_to_out_file = OUT_TMP_DIR + filename
 		
@@ -120,16 +120,12 @@ def check_file_hash(files_to_hash):
 		
 		if hash_in != hash_out:
 			broken_files.append(filename)
-
-	if len(broken_files) != 0:
-		log.error("FAILED: broken files: %s" % broken_files)
-	else:
-		log.info("PASSED: there are no broken files!")
-	
-	
+		
+	return broken_files
+		
 			
 if __name__ == "__main__":
-
+	
 	prepare()
 	
 	proc_list = [Process(target=proc_routine,args=(GEN_FILE_COUNT,)) for p in range(PROC_NUM)]
@@ -141,21 +137,13 @@ if __name__ == "__main__":
 		p.join()
 	
 	for p in proc_list:
-		log.info("%s (file put,get testing) exit with code: %d" % (p.name,p.exitcode))
+		log.info("process %s exit with code: %d" % (p.name,p.exitcode))
 	
-	files_to_hash_list = [FILES_TO_HASH.get() for p in proc_list]
+	res = check_file_hash()
 
-	checking_proc_list = [Process(target=check_file_hash,args=(files_to_hash_list.pop(),)) for p in proc_list]
-	
-	for p in checking_proc_list:
-		p.start()
-	
-	for p in checking_proc_list:
-		p.join()
-
-	for p in checking_proc_list:
-		log.info("%s (file's hash checking) exit with code: %d" % (p.name,p.exitcode))
+	if len(res) != 0:
+		log.error("FAILED: broken files: %s" % res)
+	else:
+		log.info("PASSED: there are not broken files!")
 
 	cleanup()
-
-	
